@@ -24,6 +24,7 @@ jobs:
           repository: aws-controllers-k8s/code-generator
           ref: 84c9b99
           path: code-generator
+          fetch-depth: 0
 
       - name: Set up Go
         uses: actions/setup-go@v5
