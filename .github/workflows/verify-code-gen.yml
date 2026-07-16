@@ -61,6 +61,9 @@ jobs:
       - name: Check for diff
         run: |
           cd s3control-controller
+          # Reset metadata file — build stamps (date, hash, go version) always differ
+          # between CI builds. Only generated source files matter for drift detection.
+          git checkout -- apis/v1alpha1/ack-generate-metadata.yaml
           if ! git diff --exit-code; then
             echo ""
             echo "ERROR: Generated files are out of date."
