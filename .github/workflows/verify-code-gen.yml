@@ -22,9 +22,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: aws-controllers-k8s/code-generator
-          ref: 84c9b99
+          ref: 84c9b9904125e2182619e048d7e35d0f8700d20c
           path: code-generator
-          fetch-depth: 0
 
       - name: Set up Go
         uses: actions/setup-go@v5
