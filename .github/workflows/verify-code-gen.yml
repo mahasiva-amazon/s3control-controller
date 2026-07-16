@@ -1,0 +1,70 @@
+name: Verify Code Generation
+
+on:
+  push:
+    branches:
+      - validation
+
+jobs:
+  verify-code-gen:
+    name: Verify generated code is up-to-date
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout service controller
+        uses: actions/checkout@v4
+        with:
+          path: s3control-controller
+
+      - name: Checkout code-generator
+        uses: actions/checkout@v4
+        with:
+          repository: aws-controllers-k8s/code-generator
+          ref: 84c9b9904125e2182619e048d7e35d0f8700d20c
+          path: code-generator
+
+      - name: Checkout ACK runtime
+        uses: actions/checkout@v4
+        with:
+          repository: aws-controllers-k8s/runtime
+          ref: v0.61.0
+          path: runtime
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: code-generator/go.mod
+          cache-dependency-path: code-generator/go.sum
+
+      - name: Build ack-generate
+        run: |
+          cd code-generator
+          go build -o bin/ack-generate ./cmd/ack-generate/
+
+      - name: Install controller-gen
+        run: |
+          cd code-generator
+          bash scripts/install-controller-gen.sh
+
+      - name: Run build-controller.sh
+        env:
+          SERVICE: s3control
+          ACK_GENERATE_BIN_PATH: ${{ github.workspace }}/code-generator/bin/ack-generate
+          SERVICE_CONTROLLER_SOURCE_PATH: ${{ github.workspace }}/s3control-controller
+          RUNTIME_CRD_DIR: ${{ github.workspace }}/runtime/config
+        run: |
+          cd ${{ github.workspace }}/s3control-controller
+          bash ${{ github.workspace }}/code-generator/scripts/build-controller.sh s3control
+
+      - name: Check for diff
+        run: |
+          cd s3control-controller
+          # Reset metadata file — build stamps always differ between CI environments
+          git checkout -- apis/v1alpha1/ack-generate-metadata.yaml
+          if ! git diff --exit-code; then
+            echo ""
+            echo "ERROR: Generated files are out of date."
+            echo "Please run the code-generator locally and commit the updated files."
+            echo "See: https://aws-controllers-k8s.github.io/docs/contributing/setup/"
+            exit 1
+          fi
+          echo "All generated files are up-to-date."
