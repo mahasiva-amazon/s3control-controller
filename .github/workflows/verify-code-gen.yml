@@ -19,7 +19,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: aws-controllers-k8s/code-generator
-          ref: 84c9b9904125e2182619e048d7e35d0f8700d20c
+          ref: main
           path: code-generator
 
       - name: Checkout ACK runtime
